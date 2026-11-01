@@ -4,7 +4,7 @@
 **Submitted report:** [`report/Formative2_HMM_Report.pdf`](report/Formative2_HMM_Report.pdf). **Notebook:** [`HMM_Activity_Recognition.ipynb`](HMM_Activity_Recognition.ipynb).
 **Videos (one per activity):** [Standing](https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/standing.mp4) · [Walking](https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/walking.mp4) · [Jumping](https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/jumping.mp4) · [Still](https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/still.mp4)
 
-**Author:** Ivan Manzi Ya Musana | **Type:** individual assignment (one student, one iPhone 13, one device id)
+**Author:** Ivan Manzi Ya Musana | **Type:** individual assignment
 
 Four activity states (**standing, walking, jumping, still**) are recognized from smartphone accelerometer and gyroscope
 data with a Hidden Markov Model written from scratch in numpy (log-space forward-backward, Baum-Welch with a
