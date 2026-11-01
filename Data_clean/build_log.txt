@@ -1,4 +1,4 @@
-== PHASE 1: raw audit (52 zips in Data/, read-only) ==
+== PHASE 1: raw data checks (52 zips in Data/, read-only) ==
 files per activity: {'standing': 13, 'walking': 13, 'jumping': 13, 'still': 13} | total: 52
 accelerometer x/y/z column order in files: [('z', 'y', 'x')] (merge is done by NAME)
 measured accelerometer rate over all zips: min 100.105  max 100.124  mean 100.119  std 0.0049 Hz
@@ -20,84 +20,92 @@ hand-named recordings (12):
   still-2026-10-28_16-40-36
   still01-2026-10-28_17-23-58
   still02-2026-10-28_17-24-09
+raw recorded seconds per activity: {'standing': 118.3, 'walking': 130.1, 'jumping': 121.7, 'still': 115.2}
 
-== PHASE 2: clean (align -> trim 1.5 s each end -> cap 10 s -> keep >= 5 s) ==
-kept 43 clips, excluded 9 (see Data_clean/excluded.csv):
-  - Data/standing/2026-10-28_17-17-21.zip: too short after trimming 1.5 s from each end (3.73 s < 5 s; raw 6.74 s)
-  - Data/standing/2026-10-28_17-17-30.zip: too short after trimming 1.5 s from each end (4.94 s < 5 s; raw 7.96 s)
-  - Data/standing/standing_02-2026-10-28_17-23-27.zip: mislabeled: signal looks like walking, not standing (trimmed accel-magnitude std 0.889, gyro std 0.586; class medians of kept files: standing 0.092, walking 0.772, jumping 5.651, still 0.041)
-  - Data/jumping/2026-10-28_17-06-26.zip: too short after trimming 1.5 s from each end (4.57 s < 5 s; raw 7.59 s)
-  - Data/jumping/jumping_-2026-10-28_16-41-22.zip: too short after trimming 1.5 s from each end (4.18 s < 5 s; raw 7.19 s)
-  - Data/still/2026-10-28_17-14-00.zip: too short after trimming 1.5 s from each end (3.84 s < 5 s; raw 6.85 s)
-  - Data/still/2026-10-28_17-14-08.zip: too short after trimming 1.5 s from each end (4.73 s < 5 s; raw 7.75 s)
-  - Data/still/2026-10-28_17-14-16.zip: too short after trimming 1.5 s from each end (4.05 s < 5 s; raw 7.06 s)
-  - Data/still/2026-10-28_17-14-34.zip: too short after trimming 1.5 s from each end (4.36 s < 5 s; raw 7.38 s)
+== PHASE 2: trim sweep (rule: largest trim for which every activity reaches 90 s; edge-transient rule > 2x median, clips 5-10 s) ==
+trim 1.00 s: standing   76.9  walking   97.7  jumping   95.5  still   81.2  clips 49  -> FAIL
+trim 0.75 s: standing   86.1  walking  103.2  jumping  101.9  still   90.1  clips 51  -> FAIL
+trim 0.50 s: standing   92.3  walking  108.6  jumping  107.8  still   88.2  clips 50  -> FAIL
+selected trim: 0.5 s  (NO candidate reaches the target; smallest candidate used)
+
+== PHASE 3: clean set at trim 0.5 s ==
+kept 50 clips; excluded 2 recordings and removed 7 edge segments (see Data_clean/excluded.csv):
+  - [recording] Data/standing/standing_02-2026-10-28_17-23-27.zip: mislabeled: signal looks like walking, not standing (accel-magnitude std 0.862, gyro std 0.635; class medians of kept clips: standing 0.089, walking 0.778, jumping 5.542, still 0.040)
+  - [recording] Data/still/still01-2026-10-28_17-23-58.zip: shorter than 5 s after trimming 0.5 s per end and the edge-transient rule (4.76 s; raw 8.78 s)
+  - [segment] Data/standing/2026-10-28_17-16-53.zip -> standing_02.csv: removed 2 s at the start: 1-s accel-magnitude std was 2.2x, 2.9x the clip median (rule: > 2x)
+  - [segment] Data/standing/2026-10-28_17-17-39.zip -> standing_07.csv: removed 1 s at the start: 1-s accel-magnitude std was 2.7x the clip median (rule: > 2x)
+  - [segment] Data/standing/2026-10-28_17-18-17.zip -> standing_11.csv: removed 1 s at the start: 1-s accel-magnitude std was 2.3x the clip median (rule: > 2x)
+  - [segment] Data/still/still-2026-10-28_16-40-36.zip -> still_01.csv: removed 2 s at the start: 1-s accel-magnitude std was 46.7x, 7.2x the clip median (rule: > 2x)
+  - [segment] Data/still/still-2026-10-28_16-40-36.zip -> still_01.csv: removed 2 s at the end: 1-s accel-magnitude std was 2.3x, 2.3x the clip median (rule: > 2x)
+  - [segment] Data/still/2026-10-28_17-13-26.zip -> still_02.csv: removed 1 s at the start: 1-s accel-magnitude std was 2.2x the clip median (rule: > 2x)
+  - [segment] Data/still/2026-10-28_17-13-39.zip -> still_03.csv: removed 1 s at the end: 1-s accel-magnitude std was 2.1x the clip median (rule: > 2x)
 
 == PER-FILE QC (measured Hz; accel/gyro magnitude std; nearest activity by log-std medians) ==
            file split  dur_s    n     hz  accel_std  gyro_std  nearest  edge_ratio
- jumping_01.csv train   5.71  573 100.12      5.514     0.555  jumping         1.0
- jumping_02.csv train   8.10  812 100.12      5.081     0.603  jumping         0.9
- jumping_03.csv train   8.25  827 100.12      5.006     0.633  jumping         1.2
- jumping_04.csv train   7.74  776 100.12      6.586     0.730  jumping         1.0
- jumping_05.csv train   7.28  730 100.12      5.345     0.642  jumping         1.2
- jumping_06.csv train   5.34  536 100.12      6.133     1.456  jumping         1.0
- jumping_07.csv train   6.93  695 100.12      8.022     0.852  jumping         1.1
- jumping_08.csv train   5.42  544 100.12      4.483     0.603  jumping         1.0
- jumping_09.csv train   8.30  832 100.12      5.651     0.612  jumping         1.0
- jumping_10.csv  test   5.10  512 100.12      5.875     0.906  jumping         1.1
- jumping_11.csv  test   5.53  555 100.12      7.363     0.717  jumping         1.0
-standing_01.csv  test   7.32  734 100.11      0.078     0.024 standing         0.8
-standing_02.csv train   5.67  569 100.12      0.260     0.109 standing         2.9
-standing_03.csv train   5.39  541 100.12      0.094     0.030 standing         1.0
-standing_04.csv train   5.00  502 100.12      0.087     0.022 standing         1.5
-standing_05.csv train   6.12  614 100.12      0.104     0.035 standing         1.6
-standing_06.csv train   5.80  582 100.12      0.133     0.039 standing         1.0
-standing_07.csv train   5.43  545 100.12      0.085     0.022 standing         1.4
-standing_08.csv train   5.93  595 100.12      0.090     0.024 standing         1.0
-standing_09.csv train   9.04  906 100.12      0.205     0.076 standing         1.9
-standing_10.csv  test   8.24  826 100.12      0.086     0.028 standing         2.1
-   still_01.csv  test   9.99 1001 100.11      0.092     0.061 standing         8.6
-   still_02.csv train   8.90  892 100.12      0.040     0.008    still         1.3
-   still_03.csv train   7.94  796 100.12      0.043     0.008    still         1.3
-   still_04.csv train   5.05  507 100.12      0.057     0.012    still         0.9
-   still_05.csv train   5.22  524 100.12      0.041     0.006    still         0.9
-   still_06.csv train   5.00  502 100.12      0.037     0.006    still         1.2
-   still_07.csv train   5.02  504 100.12      0.033     0.008    still         1.1
-   still_08.csv  test   5.76  578 100.12      0.164     0.106 standing         3.2
-   still_09.csv  test   5.56  558 100.12      0.036     0.010    still         1.5
+ jumping_01.csv  test   6.17  619 100.11      4.344     0.702  jumping         1.3
+ jumping_02.csv train   7.71  773 100.12      5.350     0.531  jumping         0.9
+ jumping_03.csv train  10.00 1002 100.12      5.337     0.612  jumping         1.0
+ jumping_04.csv train   6.57  659 100.12      5.573     0.786  jumping         1.1
+ jumping_05.csv train   9.99 1001 100.12      5.067     0.625  jumping         1.4
+ jumping_06.csv train   9.74  976 100.12      6.757     0.741  jumping         0.7
+ jumping_07.csv train   9.28  930 100.12      5.364     0.636  jumping         1.2
+ jumping_08.csv train   7.34  736 100.12      6.444     1.454  jumping         0.9
+ jumping_09.csv train   8.93  895 100.12      8.056     0.843  jumping         1.0
+ jumping_10.csv train   7.42  744 100.12      4.430     0.588  jumping         1.0
+ jumping_11.csv train  10.00 1002 100.12      5.542     0.607  jumping         1.0
+ jumping_12.csv  test   7.10  712 100.12      6.118     0.882  jumping         1.3
+ jumping_13.csv  test   7.53  755 100.12      7.141     0.712  jumping         1.0
+standing_01.csv  test   9.32  934 100.11      0.076     0.025 standing         1.0
+standing_02.csv train   5.67  569 100.12      0.143     0.065 standing         1.4
+standing_03.csv train   7.39  741 100.12      0.107     0.036 standing         1.7
+standing_04.csv train   7.00  702 100.12      0.086     0.022 standing         1.2
+standing_05.csv train   5.72  574 100.12      0.070     0.018 standing         1.1
+standing_06.csv train   6.94  696 100.12      0.075     0.019 standing         0.8
+standing_07.csv train   7.12  714 100.12      0.105     0.034 standing         1.7
+standing_08.csv train   7.80  782 100.12      0.128     0.039 standing         1.0
+standing_09.csv train   7.43  745 100.12      0.084     0.022 standing         1.0
+standing_10.csv train   7.93  795 100.12      0.092     0.024 standing         1.2
+standing_11.csv train  10.00 1002 100.12      0.199     0.074 standing         1.9
+standing_12.csv  test  10.00 1002 100.12      0.084     0.028 standing         1.6
+   still_01.csv  test   8.57  859 100.11      0.039     0.011    still         1.5
+   still_02.csv train   9.90  992 100.12      0.040     0.008    still         1.3
+   still_03.csv train   8.94  896 100.12      0.044     0.008    still         1.3
+   still_04.csv train   7.05  707 100.12      0.054     0.011    still         1.1
+   still_05.csv train   5.83  585 100.12      0.106     0.023 standing         1.0
+   still_06.csv train   6.73  675 100.12      0.038     0.007    still         1.0
+   still_07.csv train   6.04  606 100.12      0.041     0.006    still         0.9
+   still_08.csv train   7.22  724 100.12      0.040     0.016    still         1.0
+   still_09.csv train   6.36  638 100.12      0.110     0.027 standing         1.1
+   still_10.csv train   7.00  702 100.12      0.040     0.006    still         1.3
+   still_11.csv train   7.02  704 100.12      0.033     0.009    still         1.1
+   still_12.csv  test   7.56  758 100.12      0.039     0.012    still         1.7
  walking_01.csv  test   9.99 1001 100.11      0.715     0.679  walking         1.0
- walking_02.csv train   5.62  564 100.11      0.658     0.608  walking         0.9
- walking_03.csv train   6.04  606 100.11      0.772     0.714  walking         1.2
- walking_04.csv train   6.14  616 100.11      0.766     0.713  walking         1.0
- walking_05.csv train   5.95  597 100.11      0.777     0.788  walking         0.8
- walking_06.csv train   6.11  613 100.11      0.660     0.631  walking         1.3
- walking_07.csv train   5.75  577 100.11      0.886     0.691  walking         1.5
- walking_08.csv train   6.07  609 100.11      1.059     0.444  walking         1.9
- walking_09.csv train   5.63  565 100.11      0.771     0.687  walking         1.0
- walking_10.csv train   6.25  627 100.11      0.795     0.741  walking         0.9
+ walking_02.csv train   7.62  764 100.11      0.674     0.570  walking         1.6
+ walking_03.csv train   8.04  806 100.11      0.763     0.649  walking         1.3
+ walking_04.csv train   8.14  816 100.11      0.721     0.701  walking         0.9
+ walking_05.csv train   7.95  797 100.11      0.790     0.769  walking         1.0
+ walking_06.csv train   8.11  813 100.11      0.635     0.597  walking         1.1
+ walking_07.csv train   7.75  777 100.11      0.861     0.651  walking         1.1
+ walking_08.csv train   8.07  809 100.11      1.155     0.449  walking         1.7
+ walking_09.csv train   7.63  765 100.11      0.781     0.644  walking         1.1
+ walking_10.csv train   8.25  827 100.11      0.778     0.686  walking         1.3
  walking_11.csv train  10.00 1002 100.11      0.663     0.547  walking         1.0
- walking_12.csv  test   5.08  510 100.11      0.840     0.332  walking         0.8
- walking_13.csv  test   8.06  808 100.11      1.558     0.499  walking         1.3
+ walking_12.csv  test   7.08  710 100.11      0.853     0.334  walking         1.4
+ walking_13.csv  test  10.00 1002 100.11      1.498     0.493  walking         0.9
 
-class medians (accel std, gyro std) of kept clips: {'standing': (0.092, 0.029), 'walking': (0.772, 0.679), 'jumping': (5.651, 0.642), 'still': (0.041, 0.008)}
-QC-flagged clips (2):
-  - test/still_01.csv <- still-2026-10-28_16-40-36: QC: std-profile closer to 'standing'; QC: residual edge transient (edge/median 1-s std = 8.6)
-  - test/still_08.csv <- still01-2026-10-28_17-23-58: QC: std-profile closer to 'standing'; QC: residual edge transient (edge/median 1-s std = 3.2)
+class medians (accel std, gyro std) of kept clips: {'standing': (0.089, 0.026), 'walking': (0.778, 0.644), 'jumping': (5.542, 0.702), 'still': (0.04, 0.01)}
+QC-flagged clips (2), kept (the rules above are the only filters):
+  - train/still_05.csv <- 2026-10-28_17-14-00: QC: std-profile closer to 'standing'
+  - train/still_09.csv <- 2026-10-28_17-14-34: QC: std-profile closer to 'standing'
 
 == TOTALS (train + test combined, after cleaning) ==
-standing  files 10 (train  8 / test 2) total   64.0 s  BELOW 90 s
-walking   files 13 (train 10 / test 3) total   86.7 s  BELOW 90 s
-jumping   files 11 (train  9 / test 2) total   73.7 s  BELOW 90 s
-still     files  9 (train  6 / test 3) total   58.5 s  BELOW 90 s
-total files: 43 (train 33, test 10)
-raw recorded seconds per activity (before cleaning): {'standing': 118.3, 'walking': 130.1, 'jumping': 121.7, 'still': 115.2}
+standing  files 12 (train 10 / test 2) total   92.3 s  OK
+walking   files 13 (train 10 / test 3) total  108.6 s  OK
+jumping   files 13 (train 10 / test 3) total  107.8 s  OK
+still     files 12 (train 10 / test 2) total   88.2 s  BELOW 90 s
+total files: 50 (train 40, test 10)
 
-SHORTFALL vs the 90 s per-activity target (after trimming 1.5 s per end, 5 s minimum clip):
-  standing  missing  26.0 s -> record 4 more 10 s clip(s) (each yields 7 s after trimming) or 3 13 s clip(s) (each yields 10 s)
-  walking   missing   3.3 s -> record 1 more 10 s clip(s) (each yields 7 s after trimming) or 1 13 s clip(s) (each yields 10 s)
-  jumping   missing  16.3 s -> record 3 more 10 s clip(s) (each yields 7 s after trimming) or 2 13 s clip(s) (each yields 10 s)
-  still     missing  31.5 s -> record 5 more 10 s clip(s) (each yields 7 s after trimming) or 4 13 s clip(s) (each yields 10 s)
-  (info only, not applied) with 1.0 s trim the clean totals would be: {'standing': 80.0, 'walking': 97.9, 'jumping': 95.7, 'still': 82.8}
-  (info only, not applied) with 0.5 s trim the clean totals would be: {'standing': 95.5, 'walking': 108.8, 'jumping': 108.0, 'still': 98.7}
+SHORTFALL vs the 90 s per-activity target (trim 0.5 s, edge-transient rule, 5-10 s clips):
+  still     missing   1.8 s -> record 1 more recording(s) of at least 11.0 s (each yields 10 s after trimming; add margin for edge-transient seconds)
 
-written: Data_clean/manifest.csv Data_clean/excluded.csv Data_clean/build_log.txt
+written: Data_clean/manifest.csv Data_clean/excluded.csv Data_clean/trim_sweep.csv Data_clean/build_log.txt

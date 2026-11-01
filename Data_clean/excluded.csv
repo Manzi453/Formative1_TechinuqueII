@@ -1,10 +1,10 @@
-original_zip,activity,reason
-Data/standing/2026-10-28_17-17-21.zip,standing,too short after trimming 1.5 s from each end (3.73 s < 5 s; raw 6.74 s)
-Data/standing/2026-10-28_17-17-30.zip,standing,too short after trimming 1.5 s from each end (4.94 s < 5 s; raw 7.96 s)
-Data/standing/standing_02-2026-10-28_17-23-27.zip,standing,"mislabeled: signal looks like walking, not standing (trimmed accel-magnitude std 0.889, gyro std 0.586; class medians of kept files: standing 0.092, walking 0.772, jumping 5.651, still 0.041)"
-Data/jumping/2026-10-28_17-06-26.zip,jumping,too short after trimming 1.5 s from each end (4.57 s < 5 s; raw 7.59 s)
-Data/jumping/jumping_-2026-10-28_16-41-22.zip,jumping,too short after trimming 1.5 s from each end (4.18 s < 5 s; raw 7.19 s)
-Data/still/2026-10-28_17-14-00.zip,still,too short after trimming 1.5 s from each end (3.84 s < 5 s; raw 6.85 s)
-Data/still/2026-10-28_17-14-08.zip,still,too short after trimming 1.5 s from each end (4.73 s < 5 s; raw 7.75 s)
-Data/still/2026-10-28_17-14-16.zip,still,too short after trimming 1.5 s from each end (4.05 s < 5 s; raw 7.06 s)
-Data/still/2026-10-28_17-14-34.zip,still,too short after trimming 1.5 s from each end (4.36 s < 5 s; raw 7.38 s)
+original_zip,activity,kind,new_name,reason
+Data/standing/standing_02-2026-10-28_17-23-27.zip,standing,recording,,"mislabeled: signal looks like walking, not standing (accel-magnitude std 0.862, gyro std 0.635; class medians of kept clips: standing 0.089, walking 0.778, jumping 5.542, still 0.040)"
+Data/still/still01-2026-10-28_17-23-58.zip,still,recording,,shorter than 5 s after trimming 0.5 s per end and the edge-transient rule (4.76 s; raw 8.78 s)
+Data/standing/2026-10-28_17-16-53.zip,standing,segment,standing_02.csv,"removed 2 s at the start: 1-s accel-magnitude std was 2.2x, 2.9x the clip median (rule: > 2x)"
+Data/standing/2026-10-28_17-17-39.zip,standing,segment,standing_07.csv,removed 1 s at the start: 1-s accel-magnitude std was 2.7x the clip median (rule: > 2x)
+Data/standing/2026-10-28_17-18-17.zip,standing,segment,standing_11.csv,removed 1 s at the start: 1-s accel-magnitude std was 2.3x the clip median (rule: > 2x)
+Data/still/2026-10-28_17-13-26.zip,still,segment,still_02.csv,removed 1 s at the start: 1-s accel-magnitude std was 2.2x the clip median (rule: > 2x)
+Data/still/2026-10-28_17-13-39.zip,still,segment,still_03.csv,removed 1 s at the end: 1-s accel-magnitude std was 2.1x the clip median (rule: > 2x)
+Data/still/still-2026-10-28_16-40-36.zip,still,segment,still_01.csv,"removed 2 s at the start: 1-s accel-magnitude std was 46.7x, 7.2x the clip median (rule: > 2x)"
+Data/still/still-2026-10-28_16-40-36.zip,still,segment,still_01.csv,"removed 2 s at the end: 1-s accel-magnitude std was 2.3x, 2.3x the clip median (rule: > 2x)"

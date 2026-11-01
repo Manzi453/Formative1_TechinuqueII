@@ -1,0 +1,4 @@
+trim_s,standing,walking,jumping,still,clips,all_activities_reach_90s,selected
+1.0,76.9,97.7,95.5,81.2,49,False,False
+0.75,86.1,103.2,101.9,90.1,51,False,False
+0.5,92.3,108.6,107.8,88.2,50,False,True
