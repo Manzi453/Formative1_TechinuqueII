@@ -10,6 +10,6 @@ ipykernel==7.4.0
 nbformat==5.11.1
 nbconvert==7.17.2
 
-# --- report/build_report.py (also needs a Chrome or Chromium binary; set CHROME to its path) ---
+# --- scripts/build_report.py (also needs a Chrome or Chromium binary; set CHROME to its path) ---
 Markdown==3.11.2
 pypdf==6.21.4

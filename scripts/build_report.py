@@ -7,13 +7,17 @@ import sys
 from pathlib import Path
 
 import markdown
+import numpy as np
 import pandas as pd
 from pypdf import PdfReader
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
-MD, PDF, TMP = HERE / "Formative2_HMM_Report.md", HERE / "Formative2_HMM_Report.pdf", HERE / "_build.html"
+ROOT = Path(__file__).resolve().parent.parent
+REPORT = ROOT / "report"
+MD, PDF, TMP = REPORT / "Formative2_HMM_Report.md", REPORT / "Formative2_HMM_Report.pdf", REPORT / "_build.html"
 CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+PLACEHOLDER = re.compile(r"\[(?:VIDEO LINK: \w+|WRITE IN YOUR OWN WORDS|CONFIRM[^\]]*)\]")
+ACTS = ["standing", "walking", "jumping", "still"]
+NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
 CSS = """
 @page { size: A4; margin: 13mm 14mm 14mm 14mm; @bottom-center { content: counter(page) " / " counter(pages); font: 8pt Helvetica, Arial, sans-serif; color: #666; } }
@@ -26,50 +30,161 @@ th { background: #eee; } p.cap, figcaption { font-size: 8pt; color: #333; text-a
 figure { margin: 5px 0 4px; text-align: center; break-inside: avoid; } figure img { max-width: 100%; }
 .row { display: flex; gap: 8px; justify-content: center; align-items: flex-start; break-inside: avoid; } .row figure { flex: 1 1 0; margin: 4px 0; } .row img { width: 78%; }
 .ph { background: #fff3a0; border: 1px dashed #c70; padding: 0 3px; font-weight: bold; color: #a00; }
+blockquote { background: #fffbe6; border-left: 3px solid #c70; margin: 4px 0; padding: 1px 9px; } blockquote p, blockquote li { text-align: left; } blockquote ol { margin: 2px 0 4px 16px; padding: 0; }
 """
+
+
+def pct(x, nd=1):
+    return f"{x * 100:.{nd}f} %"
 
 
 def check_numbers(text):
     """Fail loudly if a quoted number does not match the code outputs."""
     m = json.loads((ROOT / "results/metrics.json").read_text())
-    act = pd.read_csv(ROOT / "results/test_per_activity.csv")
-    man = pd.read_csv(ROOT / "Data_clean/manifest.csv")
+    f = json.loads((ROOT / "results/findings.json").read_text())
+    act = pd.read_csv(ROOT / "results/test_per_activity.csv").set_index("Activity")
     cmp_ = pd.read_csv(ROOT / "results/model_comparison.csv")
     A = pd.read_csv(ROOT / "results/transition_matrix.csv", index_col=0)
-    expect = {
-        "rate mean": f"{m['measured_hz_mean']:.3f} Hz", "rate min": f"{m['measured_hz_min']:.3f}", "rate max": f"{m['measured_hz_max']:.3f}",
-        "rate std": f"{m['measured_hz_std']:.3f} Hz",
-        "train windows": f"{m['n_train_windows']}", "test windows": f"{m['n_test_windows']}",
-        "overall": f"{m['overall_accuracy_per_clip'] * 100:.1f} %", "correct": f"{m['correct_windows']} of {m['test_windows']}",
-        "wilson": f"{m['overall_accuracy_wilson95'][0] * 100:.1f} % to {m['overall_accuracy_wilson95'][1] * 100:.1f} %",
-        "emission only": f"{m['accuracy_emission_only_per_clip'] * 100:.1f} %",
-        "ll first": f"{m['ll_first']:.2f}", "ll final": f"{m['ll_final']:.2f}", "bw iterations": f"{m['bw_iterations']} iterations",
-        "last dLL": f"{m['ll_min_step'] * 1e5:.1f}e-5", "at floor": f"{m['variances_at_floor'] * 100:.0f} %",
-        "median var": f"{m['median_unfloored_variance']:.3f}", "var floor": f"({m['var_floor']} in Z-score units)",
-        "diag min": f"{A.values.diagonal().min():.2f} for still", "diag max": f"{A.values.diagonal().max():.3f} for jumping",
-    }
-    for _, r in act.iterrows():
-        row = f"| {r['Activity']} | {int(r['Number of Samples'])} | {r['Sensitivity']:.3f} | {r['Specificity']:.3f} | {r['Accuracy (one-vs-rest)']:.3f} |"
-        expect[f"table2 {r['Activity']}"] = row
-    expect["table2 overall"] = f"**{m['overall_accuracy_per_clip']:.3f} ({m['correct_windows']} / {m['test_windows']})**"
+    cv = pd.read_csv(ROOT / "results/variance_floor_cv.csv")
+    pi_cv = pd.read_csv(ROOT / "results/pi_update_cv.csv")
+    sens = pd.read_csv(ROOT / "results/variance_floor_sensitivity_posthoc.csv")
+    errs = pd.read_csv(ROOT / "results/test_errors.csv")
+    cat = pd.read_csv(ROOT / "results/test_confusion_matrix_concatenated.csv", index_col=0)
+    man = pd.read_csv(ROOT / "Data_clean/manifest.csv")
+    exc = pd.read_csv(ROOT / "Data_clean/excluded.csv")
+    sweep = pd.read_csv(ROOT / "Data_clean/trim_sweep.csv").set_index("trim_s")
+    log = (ROOT / "Data_clean/build_log.txt").read_text()
+
+    # windows per activity/split recomputed from the cleaned files
+    win, hop = m["window_samples"], m["hop_samples"]
+    man["windows"] = (man["n_samples"] - win) // hop + 1
     sec = man.groupby("activity").duration_s.sum()
     cnt = man.pivot_table(index="activity", columns="split", values="new_name", aggfunc="count")
-    for a in ["standing", "walking", "jumping", "still"]:
-        expect[f"table1 {a}"] = f"| {a} | {cnt.loc[a, 'train']} | {cnt.loc[a, 'test']} | {sec[a]:.1f} |"
-    expect["table1 total"] = f"| **Total** | **{cnt['train'].sum()}** | **{cnt['test'].sum()}** | **{sec.sum():.1f}** |"
-    expect["emission-only count"] = f"{round(cmp_.iloc[2, 1] * m['test_windows'])} of {m['test_windows']}"
-    missing = {k: v for k, v in expect.items() if v not in text}
+    wn = man.pivot_table(index="activity", columns="split", values="windows", aggfunc="sum")
+    assert int(wn["train"].sum()) == m["n_train_windows"] and int(wn["test"].sum()) == m["n_test_windows"], \
+        "window recount differs from metrics.json"
+
+    raw_tot = json.loads(re.search(r"raw recorded seconds per activity: (\{.*\})", log).group(1).replace("'", '"'))
+    raw_min, raw_max = (float(x) for x in re.search(r"raw durations: min ([\d.]+) s, max ([\d.]+) s", log).groups())
+    seg = exc[exc.kind == "segment"]
+    seg_s = int(seg.reason.str.extract(r"removed (\d+) s")[0].astype(int).sum())
+    seg_worst = max(float(x) for r in seg.reason for x in re.findall(r"([\d.]+)x", r))
+    mis = exc[exc.reason.str.contains("mislabeled")].reason.iloc[0]
+    mis_std = re.search(r"accel-magnitude std ([\d.]+)", mis).group(1)
+    mis_med = re.search(r"standing ([\d.]+)", mis).group(1)
+    short = exc[(exc.kind == "recording") & exc.reason.str.contains("shorter than")].reason.iloc[0]
+    short_s = re.search(r"\(([\d.]+) s;", short).group(1)
+    miss = 90 - sec["still"]
+    still01 = man[man.new_name == "still_01.csv"].duration_s.iloc[0]
+    n_cat_err = int(cat.values.sum() - np.trace(cat.values))
+    still_err = errs[errs.true == "still"]
+
+    E = {}
+    E["rate"] = (f"{m['measured_hz_mean']:.3f} Hz on average (range {m['measured_hz_min']:.3f} to {m['measured_hz_max']:.3f} Hz, "
+                 f"std {m['measured_hz_std']:.3f} Hz)")
+    E["raw clips"] = f"{raw_min:.1f} to {raw_max:.1f} s each (" + ", ".join(f"{raw_tot[a]:.1f} s {a}" for a in ACTS) + ")"
+    E["raw count"] = "52 clips, 13 per activity" if "'standing': 13, 'walking': 13, 'jumping': 13, 'still': 13" in log else "RAW COUNT CHANGED"
+    E["sweep"] = (f"(1.0 s leaves standing at {sweep.loc[1.0, 'standing']:.1f} s and still at {sweep.loc[1.0, 'still']:.1f} s; "
+                  f"0.75 s leaves standing at {sweep.loc[0.75, 'standing']:.1f} s; 0.5 s leaves still at {sweep.loc[0.5, 'still']:.1f} s)")
+    E["trim used"] = f"so I used {m['trim_s']:g} s"
+    E["edge rule"] = f"removed {seg_s} s in total from {seg.new_name.nunique()} clips"
+    E["edge worst"] = f"({seg_worst:.1f} times the median)"
+    E["mislabelled"] = f"accelerometer-magnitude std {mis_std} against a standing median of {mis_med}"
+    E["short clip"] = f"is {short_s} s long after the edge rule"
+    for a in ACTS:
+        b = "**" if a == "still" else ""
+        E[f"table1 {a}"] = f"| {a} | {cnt.loc[a, 'train']} | {cnt.loc[a, 'test']} | {b}{sec[a]:.1f}{b} | {wn.loc[a, 'train']} / {wn.loc[a, 'test']} |"
+    E["table1 total"] = (f"| **Total** | **{cnt['train'].sum()}** | **{cnt['test'].sum()}** | **{sec.sum():.1f}** | "
+                         f"**{wn['train'].sum()} / {wn['test'].sum()}** |")
+    E["table1 caption"] = f"Cleaned dataset ({len(man)} clips)"
+    E["still short"] = f"<b>still is {miss:.1f} s short</b> ({sec['still']:.1f} s)"
+    E["windows"] = f"giving {m['n_train_windows']} training and {m['n_test_windows']} test windows"
+    E["window samples"] = f"({m['window_samples']} samples at {m['measured_hz_mean']:.3f} Hz)"
+    assert abs(cv.iloc[0, 1] - cv.iloc[2, 1]) < 1e-12, "floors 0.01..0.1 no longer tie"
+    E["floor cv"] = (f"the accuracy was {pct(cv.iloc[0, 1])} for 0.01 to 0.1, {pct(cv.iloc[3, 1])} for 0.25 and "
+                     f"{pct(cv.iloc[4, 1])} for 0.5, so the floor is {m['var_floor']:g}")
+    assert abs(pi_cv.iloc[0, 1] - pi_cv.iloc[1, 1]) < 1e-12 and not m["update_pi"], "pi decision changed"
+    E["pi cv"] = f"it was not ({pct(pi_cv.iloc[0, 1])} both ways)"
+    E["training clips"] = f"all {m['n_train_clips']} training clips concatenated"
+    E["bw"] = f"converged after {m['bw_iterations']} iterations** (|&Delta;LL| = {m['ll_min_step'] * 1e5:.1f}e-5"
+    E["ll"] = f"from {m['ll_first']:.2f} to {m['ll_final']:.2f}"
+    assert abs(cmp_.iloc[0, 1] - cmp_.iloc[1, 1]) < 1e-12, "test predictions differ with/without Baum-Welch"
+    E["bw same"] = f"({m['correct_windows']} of {m['test_windows']} correct in both cases)"
+    E["floor pinned"] = f"{pct(m['variances_at_floor'])} of the state variances sit exactly at the floor"
+    E["median var"] = f"is only {m['median_unfloored_variance']:.3f})"
+    for a in ACTS:
+        r = act.loc[a]
+        E[f"table2 {a}"] = f"| {a} | {int(r['Number of Samples'])} | {r['Sensitivity']:.3f} | {r['Specificity']:.3f} | {r['Accuracy (one-vs-rest)']:.3f} |"
+    E["table2 overall"] = (f"| **Overall accuracy** | **{m['test_windows']}** | | | "
+                           f"**{m['overall_accuracy_per_clip']:.3f} ({m['correct_windows']} / {m['test_windows']})** |")
+    E["wilson"] = f"{pct(m['overall_accuracy_wilson95'][0])} to {pct(m['overall_accuracy_wilson95'][1])}"
+    E["overall"] = f"{m['correct_windows']} of {m['test_windows']} windows ({pct(m['overall_accuracy_per_clip'])}) are correct"
+    E["train acc"] = f"scores {pct(m['train_accuracy_resubstitution'])} on its own training windows"
+    E["lofo acc"] = f"and {pct(m['train_accuracy_lofo'])} in leave-one-clip-out"
+    E["emission only"] = f"also gets {round(m['accuracy_emission_only_per_clip'] * m['test_windows'])} of {m['test_windows']} per clip"
+    E["concat"] = (f"gives {round(m['overall_accuracy_concatenated'] * m['test_windows'])} of {m['test_windows']} "
+                   f"({pct(m['overall_accuracy_concatenated'])}) with Viterbi against "
+                   f"{round(cmp_.iloc[2, 2] * m['test_windows'])} of {m['test_windows']} ({pct(cmp_.iloc[2, 2])}) without transitions")
+    assert round(m["overall_accuracy_concatenated"] * m["test_windows"]) - round(cmp_.iloc[2, 2] * m["test_windows"]) == 1, \
+        "'a gain of one window' is no longer true"
+    assert act.loc["standing", "Sensitivity"] == 1.0 and act.loc["jumping", "Sensitivity"] == 1.0
+    E["never missed"] = "(17 of 17 each)" if int(act.loc["standing", "Number of Samples"]) == int(act.loc["jumping", "Number of Samples"]) == 17 else "COUNTS CHANGED"
+    E["top4"] = ", ".join(f"`{t}`" for t in m["top_features"])
+    n_still = int(act.loc["still", "Number of Samples"])
+    E["still"] = f"sensitivity {act.loc['still', 'Sensitivity']:.3f}, {round(act.loc['still', 'Sensitivity'] * n_still)} of {n_still}"
+    assert set(still_err.decoded) == {"standing"} and len(still_err) == 4
+    E["still errors"] = "all 4 missed windows were decoded as standing, " + " and ".join(
+        f"{(still_err["clip"] == c).sum()} in `{c[:-4]}`" for c in ["still_01.csv", "still_12.csv"])
+    wk = errs[errs.true == "walking"]
+    assert set(wk["clip"]) == {"walking_13.csv"} and set(wk.decoded) == {"jumping"} and len(wk) == 2
+    E["errors first2"] = f"**{m['n_test_errors_in_first_two_windows']} of {m['n_test_errors']} are in the first two windows"
+    last = errs[errs["clip"] == "still_01.csv"]
+    E["still_01 tail"] = f"windows starting at {last.window_start_s.iloc[0]:.1f} s and {last.window_start_s.iloc[1]:.1f} s of an {still01:.1f} s clip"
+    E["fig6"] = f"({m['test_windows']} windows, shuffled clip order); crosses mark the {NUMBER_WORDS[n_cat_err]} errors"
+    d = A.values.diagonal()
+    off = A.values[~np.eye(4, dtype=bool)]
+    E["A"] = (f"({d.min():.3f} for still to {d.max():.3f} for jumping, an expected dwell of {min(f['dwell_windows'].values()):.1f} to "
+              f"{max(f['dwell_windows'].values()):.1f} windows) with small, near-uniform off-diagonal entries ({off.min():.3f} to {off.max():.3f})")
+    assert d.argmin() == ACTS.index("still") and d.argmax() == ACTS.index("jumping") and f["A_self_transitions_dominate"]
+    acc_after = sens["test accuracy (after BW)"]
+    assert abs(acc_after.min() - acc_after[sens.var_floor == m["var_floor"]].iloc[0]) < 1e-12, "chosen floor is no longer the lowest"
+    E["floor test"] = f"test accuracies between {pct(acc_after.min())} and {acc_after.max() * 100:.0f} % across the five candidate floors"
+    # facts quoted in the Section 5 skeleton
+    pa = f["per_activity"]
+    E["s5 sens"] = ", ".join(f"{a} {pa[a]['sensitivity']:.3f} / {pa[a]['specificity']:.3f}" for a in ACTS)
+    sd = f["median_accel_std"]
+    E["s5 std"] = (f"still {sd['still']:.3f}, standing {sd['standing']:.3f} (ratio {f['still_to_standing_std_ratio']:.1f}), "
+                   f"walking {sd['walking']:.3f}, jumping {sd['jumping']:.3f}")
+    dg = f["A_diagonal"]
+    E["s5 A"] = ", ".join(f"{dg[a]:.3f} ({a})" for a in ACTS)
+    E["s5 nyquist"] = f"Nyquist frequency {f['nyquist_hz']:.2f} Hz"
+    fr = f["median_dominant_freq_hz"]["still"]
+    E["s5 still freq"] = f"median dominant frequency {fr['x']:.1f} to {fr['z']:.1f} Hz per axis"
+    E["s5 walk"] = f"{pct(f['walking_share_dom_1_to_2p5_hz'])} of walking windows"
+    E["s5 ll"] = f"raised the log-likelihood by {m['ll_final'] - m['ll_first']:.2f} in {m['bw_iterations']} iterations"
+    E["s5 short"] = f"Still has {sec['still']:.1f} s, {miss:.1f} s below the 90 s target"
+    E["s1 result"] = f"{pct(m['overall_accuracy_per_clip'])} ({m['correct_windows']} of {m['test_windows']}) of the unseen test windows"
+    missing = {k: v for k, v in E.items() if v not in text}
     if missing:
         sys.exit("NUMBER MISMATCH between report and results:\n" + "\n".join(f"  {k}: expected '{v}'" for k, v in missing.items()))
-    print(f"consistency check passed ({len(expect)} quoted values match results/ and Data_clean/)")
+    print(f"consistency check passed ({len(E)} quoted values match results/ and Data_clean/)")
 
 
 def main():
+    final = "--final" in sys.argv[1:]
     text = MD.read_text(encoding="utf-8")
     check_numbers(text)
+    found = PLACEHOLDER.findall(text)
+    if found:
+        print(f"{len(found)} placeholder(s) still in the report:")
+        for p in found:
+            print("  ", p)
+        if final:
+            sys.exit("FINAL BUILD REFUSED: replace every placeholder first")
     body = markdown.markdown(text, extensions=["tables", "sane_lists"])
-    body = re.sub(r"\[VIDEO LINK: (\w+)\]", r'<span class="ph">[VIDEO LINK: \1]</span>', body)
-    TMP.write_text(f"<!doctype html><html><head><meta charset='utf-8'><title>Formative 2 HMM Report</title><style>{CSS}</style></head><body>{body}</body></html>", encoding="utf-8")
+    body = PLACEHOLDER.sub(lambda mt: f'<span class="ph">{mt.group(0)}</span>', body)
+    TMP.write_text(f"<!doctype html><html><head><meta charset='utf-8'><title>Formative 2 HMM Report</title>"
+                   f"<style>{CSS}</style></head><body>{body}</body></html>", encoding="utf-8")
     try:
         subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--no-pdf-header-footer", "--allow-file-access-from-files",
                         f"--print-to-pdf={PDF}", TMP.as_uri()], check=True, capture_output=True, timeout=180)
