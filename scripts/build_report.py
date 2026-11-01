@@ -21,17 +21,18 @@ VIDEO_BASE = "https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data
 NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
 CSS = """
-@page { size: A4; margin: 13mm 14mm 14mm 14mm; @bottom-center { content: counter(page) " / " counter(pages); font: 8pt Helvetica, Arial, sans-serif; color: #666; } }
-body { font: 9.3pt/1.32 Helvetica, Arial, sans-serif; color: #1b1b1b; margin: 0; }
-h1 { font-size: 16pt; margin: 0 0 3px; } h2 { font-size: 11.5pt; margin: 11px 0 3px; border-bottom: 1px solid #bbb; padding-bottom: 1px; }
-h3 { font-size: 9.8pt; margin: 7px 0 2px; } p { margin: 3px 0 4px; text-align: justify; } li { margin: 1px 0; } ul { margin: 2px 0 4px 16px; padding: 0; }
-code { font: 8.2pt Menlo, Consolas, monospace; background: #f1f1f1; padding: 0 2px; border-radius: 2px; }
-table { border-collapse: collapse; margin: 4px auto 2px; font-size: 8.6pt; } th, td { border: 1px solid #999; padding: 2px 7px; text-align: center; }
-th { background: #eee; } p.cap, figcaption { font-size: 8pt; color: #333; text-align: left; margin: 2px 6px 6px; }
+@page { size: A4; margin: 14mm 16mm 15mm 16mm; @bottom-center { content: "Page " counter(page) " of " counter(pages); font: 8.5pt Calibri, Carlito, Helvetica, Arial, sans-serif; color: #333; } }
+body { font: 9.6pt/1.34 Calibri, Carlito, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #111; margin: 0; }
+.hdr { text-align: center; border-bottom: 1px solid #888; padding-bottom: 5px; margin-bottom: 2px; } .hdr h1 { font-size: 13.5pt; margin: 0 0 2px; } .hdr p { margin: 1px 0; text-align: center; font-size: 10pt; }
+h2 { font-size: 11pt; margin: 9px 0 2px; } p { margin: 3px 0 5px; text-align: justify; } li { margin: 2px 0 4px; text-align: justify; } ul { margin: 2px 0 4px 18px; padding: 0; }
+a { color: #111; text-decoration: underline; }
+code { font: 8.4pt Menlo, Consolas, monospace; background: #f1f1f1; padding: 0 2px; border-radius: 2px; overflow-wrap: anywhere; }
+table { border-collapse: collapse; margin: 5px auto 1px; font-size: 8.8pt; max-width: 100%; } th, td { border: 1px solid #c3c9d3; padding: 2px 9px; text-align: left; vertical-align: top; }
+th { background: #dde3ec; } p.cap, figcaption { font-style: italic; font-size: 8.6pt; color: #222; text-align: center; margin: 2px 10px 7px; }
 figure { margin: 5px 0 4px; text-align: center; break-inside: avoid; } figure img { max-width: 100%; }
 .row { display: flex; gap: 8px; justify-content: center; align-items: flex-start; break-inside: avoid; } .row figure { flex: 1 1 0; margin: 4px 0; } .row img { width: 78%; }
 .ph { background: #fff3a0; border: 1px dashed #c70; padding: 0 3px; font-weight: bold; color: #a00; }
-blockquote { background: #fffbe6; border-left: 3px solid #c70; margin: 4px 0; padding: 1px 9px; } blockquote p, blockquote li { text-align: left; } blockquote ol { margin: 2px 0 4px 16px; padding: 0; }
+blockquote { background: #fffbe6; border-left: 3px solid #c70; margin: 4px 0; padding: 1px 9px; }
 """
 
 
@@ -192,7 +193,13 @@ def check_numbers(text):
             except FileNotFoundError:
                 pass
         assert tracked, f"Data/videos/{a}.mp4 is not tracked by git, so the link would not open"
-        E[f"video {a}"] = f"<{VIDEO_BASE}{a}.mp4>"
+        E[f"video {a}"] = f"[{a.capitalize()}]({VIDEO_BASE}{a}.mp4)"
+    E["header github"] = 'GitHub: <a href="https://github.com/Manzi453/Formative1_TechinuqueII">'
+    E["table2 sampling"] = (f"| iPhone 13 | 100 Hz | {m['measured_hz_mean']:.3f} Hz ({m['measured_hz_min']:.3f} to {m['measured_hz_max']:.3f} Hz) | "
+                            f"{m['measured_hz_mean']:.3f} Hz, no resampling |")
+    E["features"] = f"I compute {m['n_features'] // 2} features, **{m['n_features']} in total** (Table 3)"
+    E["table4 caption"] = "Table 4. Results on the unseen test clips"
+    assert "three orders" not in text, "outdated magnitude claim is back"
     missing = {k: v for k, v in E.items() if v not in text}
     if missing:
         sys.exit("NUMBER MISMATCH between report and results:\n" + "\n".join(f"  {k}: expected '{v}'" for k, v in missing.items()))
