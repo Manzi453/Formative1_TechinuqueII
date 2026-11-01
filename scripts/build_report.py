@@ -17,6 +17,7 @@ MD, PDF, TMP = REPORT / "Formative2_HMM_Report.md", REPORT / "Formative2_HMM_Rep
 CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 PLACEHOLDER = re.compile(r"\[(?:VIDEO LINK: \w+|WRITE IN YOUR OWN WORDS|CONFIRM[^\]]*)\]")
 ACTS = ["standing", "walking", "jumping", "still"]
+VIDEO_BASE = "https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/"
 NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
 CSS = """
@@ -149,21 +150,49 @@ def check_numbers(text):
     acc_after = sens["test accuracy (after BW)"]
     assert abs(acc_after.min() - acc_after[sens.var_floor == m["var_floor"]].iloc[0]) < 1e-12, "chosen floor is no longer the lowest"
     E["floor test"] = f"test accuracies between {pct(acc_after.min())} and {acc_after.max() * 100:.0f} % across the five candidate floors"
-    # facts quoted in the Section 5 skeleton
+    # facts quoted in Sections 1 and 5
     pa = f["per_activity"]
-    E["s5 sens"] = ", ".join(f"{a} {pa[a]['sensitivity']:.3f} / {pa[a]['specificity']:.3f}" for a in ACTS)
     sd = f["median_accel_std"]
-    E["s5 std"] = (f"still {sd['still']:.3f}, standing {sd['standing']:.3f} (ratio {f['still_to_standing_std_ratio']:.1f}), "
-                   f"walking {sd['walking']:.3f}, jumping {sd['jumping']:.3f}")
     dg = f["A_diagonal"]
-    E["s5 A"] = ", ".join(f"{dg[a]:.3f} ({a})" for a in ACTS)
-    E["s5 nyquist"] = f"Nyquist frequency {f['nyquist_hz']:.2f} Hz"
-    fr = f["median_dominant_freq_hz"]["still"]
-    E["s5 still freq"] = f"median dominant frequency {fr['x']:.1f} to {fr['z']:.1f} Hz per axis"
-    E["s5 walk"] = f"{pct(f['walking_share_dom_1_to_2p5_hz'])} of walking windows"
-    E["s5 ll"] = f"raised the log-likelihood by {m['ll_final'] - m['ll_first']:.2f} in {m['bw_iterations']} iterations"
-    E["s5 short"] = f"Still has {sec['still']:.1f} s, {miss:.1f} s below the 90 s target"
-    E["s1 result"] = f"{pct(m['overall_accuracy_per_clip'])} ({m['correct_windows']} of {m['test_windows']}) of the unseen test windows"
+    assert pa["standing"]["specificity"] == min(v["specificity"] for v in pa.values()), "standing no longer has the lowest specificity"
+    E["s1 result"] = f"decoded {pct(m['overall_accuracy_per_clip'])} ({m['correct_windows']} of {m['test_windows']}) of the windows correctly"
+    E["s5 jumping"] = (f"sensitivity {pa['jumping']['sensitivity']:.3f} and specificity {pa['jumping']['specificity']:.3f}, with an accelerometer-magnitude "
+                       f"std (median per clip {sd['jumping']:.3f}) far above walking ({sd['walking']:.3f}), standing ({sd['standing']:.3f}) and still ({sd['still']:.3f})")
+    E["s5 standing"] = f"({pa['standing']['n']} of {pa['standing']['n']}) but has the lowest specificity ({pa['standing']['specificity']:.3f})"
+    E["s5 still"] = (f"(sensitivity {pa['still']['sensitivity']:.3f}, {round(pa['still']['sensitivity'] * pa['still']['n'])} of {pa['still']['n']} windows) "
+                     f"and all {len(still_err)} errors were decoded as standing: the median std of still and standing differs only by a factor of "
+                     f"{f['still_to_standing_std_ratio']:.1f}")
+    E["s5 walking"] = f"Walking reached {pa['walking']['sensitivity']:.3f} ({round(pa['walking']['sensitivity'] * pa['walking']['n'])} of {pa['walking']['n']})"
+    rest = errs[errs.window >= 2]
+    assert set(rest["clip"]) == {"still_01.csv"} and (rest.window >= rest.windows_in_clip - 2).all(), "late errors are no longer the last windows of still_01"
+    k2, n_err = m["n_test_errors_in_first_two_windows"], m["n_test_errors"]
+    E["s5 positions"] = (f"{k2} of the {n_err} test errors are in the first two windows of a clip and the other {n_err - k2} are the last two "
+                         f"windows of `still_01`")
+    E["s5 A"] = ", ".join(f"{dg[a]:.3f} for {a}" for a in ACTS) + f"; off-diagonal entries {off.min():.3f} to {off.max():.3f}; expected dwell " \
+        f"{min(f['dwell_windows'].values()):.1f} to {max(f['dwell_windows'].values()):.1f} windows of 1 s"
+    E["s5 nyquist"] = f"the Nyquist frequency is {f['nyquist_hz']:.2f} Hz"
+    fm = f["median_dominant_freq_hz"]
+    assert round(fm["walking"]["y"], 1) == round(fm["walking"]["z"], 1) == 1.5 and round(fm["jumping"]["x"], 1) == 2.0, "cadence statements changed"
+    fr = fm["still"]
+    E["s5 still freq"] = f"median dominant frequency of still is {fr['x']:.1f} to {fr['z']:.1f} Hz per axis"
+    E["s5 walk"] = f"only {pct(f['walking_share_dom_1_to_2p5_hz'])} of walking windows"
+    E["s5 ll"] = f"raised the training log-likelihood by {m['ll_final'] - m['ll_first']:.2f} in {m['bw_iterations']} iterations"
+    E["s5 floor share"] = f"{pct(m['variances_at_floor'])} of the state variances sit at the variance floor"
+    E["s5 train vs test"] = f"training windows score {pct(m['train_accuracy_resubstitution'])} against {pct(m['overall_accuracy_per_clip'])} on test"
+    E["s5 short"] = f"still has {sec['still']:.1f} s, {miss:.1f} s below the 90 s target"
+    E["s5 conclusion"] = f"with {pct(m['overall_accuracy_per_clip'])} window accuracy ({m['correct_windows']} of {m['test_windows']})"
+    # video links: real URLs of the files in this repository, which must exist locally and be tracked by git
+    for a in ["standing", "walking", "jumping", "still"]:
+        path = ROOT / "Data" / "videos" / f"{a}.mp4"
+        assert path.exists(), f"missing video file {path}"
+        tracked = True                     # cannot be checked without a git repository
+        if (ROOT / ".git").exists():
+            try:
+                tracked = subprocess.run(["git", "ls-files", "--error-unmatch", f"Data/videos/{a}.mp4"], cwd=ROOT, capture_output=True).returncode == 0
+            except FileNotFoundError:
+                pass
+        assert tracked, f"Data/videos/{a}.mp4 is not tracked by git, so the link would not open"
+        E[f"video {a}"] = f"<{VIDEO_BASE}{a}.mp4>"
     missing = {k: v for k, v in E.items() if v not in text}
     if missing:
         sys.exit("NUMBER MISMATCH between report and results:\n" + "\n".join(f"  {k}: expected '{v}'" for k, v in missing.items()))

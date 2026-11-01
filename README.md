@@ -95,11 +95,11 @@ variances sit at the variance floor; the floor chosen on training data (0.5) gav
 because choosing a floor from test results would be tuning on the test set; 4 of the 6 test errors are in the first two windows of a clip; the test set is small and single-person.
 Details in `HMM_Activity_Recognition.ipynb` (sections 7-9) and `report/Formative2_HMM_Report.pdf`.
 
-## Video evidence (placeholders: replace with public links)
+## Video evidence
 
-* Standing: **[VIDEO LINK: standing]**
-* Walking: **[VIDEO LINK: walking]**
-* Jumping: **[VIDEO LINK: jumping]**
-* Still: **[VIDEO LINK: still]**
+One video per activity, in `Data/videos/` (public repository, no login needed):
 
-The local files are in `Data/videos/`.
+* Standing: <https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/standing.mp4>
+* Walking: <https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/walking.mp4>
+* Jumping: <https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/jumping.mp4>
+* Still: <https://github.com/Manzi453/Formative1_TechinuqueII/blob/main/Data/videos/still.mp4>
