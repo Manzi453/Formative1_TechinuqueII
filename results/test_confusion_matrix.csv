@@ -1,5 +1,5 @@
 ,standing,walking,jumping,still
-standing,13,0,0,0
-walking,0,18,2,0
-jumping,0,0,8,0
-still,3,0,0,14
+standing,17,0,0,0
+walking,0,22,2,0
+jumping,0,0,17,0
+still,4,0,0,9

@@ -1,11 +1,11 @@
-clip,true,windows,correct,accuracy,decoded,qc_note
-jumping_10.csv,jumping,4,4,1.0,jumping:4,
-jumping_11.csv,jumping,4,4,1.0,jumping:4,
-standing_01.csv,standing,6,6,1.0,standing:6,
-standing_10.csv,standing,7,7,1.0,standing:7,
-still_01.csv,still,9,8,0.889,"standing:1, still:8",QC: std-profile closer to 'standing'; QC: residual edge transient (edge/median 1-s std = 8.6)
-still_08.csv,still,4,2,0.5,"standing:2, still:2",QC: std-profile closer to 'standing'; QC: residual edge transient (edge/median 1-s std = 3.2)
-still_09.csv,still,4,4,1.0,still:4,
-walking_01.csv,walking,9,9,1.0,walking:9,
-walking_12.csv,walking,4,4,1.0,walking:4,
-walking_13.csv,walking,7,5,0.714,"walking:5, jumping:2",
+clip,true,windows,correct,accuracy,decoded
+jumping_01.csv,jumping,5,5,1.0,jumping:5
+jumping_12.csv,jumping,6,6,1.0,jumping:6
+jumping_13.csv,jumping,6,6,1.0,jumping:6
+standing_01.csv,standing,8,8,1.0,standing:8
+standing_12.csv,standing,9,9,1.0,standing:9
+still_01.csv,still,7,5,0.714,"standing:2, still:5"
+still_12.csv,still,6,4,0.667,"standing:2, still:4"
+walking_01.csv,walking,9,9,1.0,walking:9
+walking_12.csv,walking,6,6,1.0,walking:6
+walking_13.csv,walking,9,7,0.778,"walking:7, jumping:2"

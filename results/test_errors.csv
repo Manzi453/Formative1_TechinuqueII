@@ -1,0 +1,7 @@
+clip,window,windows_in_clip,window_start_s,true,decoded
+still_01.csv,5,7,5.0,still,standing
+still_01.csv,6,7,6.0,still,standing
+still_12.csv,0,6,0.0,still,standing
+still_12.csv,1,6,1.0,still,standing
+walking_13.csv,0,9,0.0,walking,jumping
+walking_13.csv,1,9,1.0,walking,jumping

@@ -1,0 +1,138 @@
+{
+  "sensitivity_best": [
+    "standing",
+    "jumping"
+  ],
+  "sensitivity_worst": [
+    "still"
+  ],
+  "per_activity": {
+    "standing": {
+      "n": 17,
+      "sensitivity": 1.0,
+      "specificity": 0.9259259259259259
+    },
+    "walking": {
+      "n": 24,
+      "sensitivity": 0.9166666666666666,
+      "specificity": 1.0
+    },
+    "jumping": {
+      "n": 17,
+      "sensitivity": 1.0,
+      "specificity": 0.9629629629629629
+    },
+    "still": {
+      "n": 13,
+      "sensitivity": 0.6923076923076923,
+      "specificity": 1.0
+    }
+  },
+  "A_diagonal": {
+    "standing": 0.8578101166539478,
+    "walking": 0.8788918130220501,
+    "jumping": 0.8867756710470083,
+    "still": 0.8527207714846343
+  },
+  "A_offdiag_min": 0.033560907376190635,
+  "A_offdiag_max": 0.0592753756565819,
+  "A_self_transitions_dominate": true,
+  "dwell_windows": {
+    "standing": 7.032849148390305,
+    "walking": 8.257080094693098,
+    "jumping": 8.832024082166813,
+    "still": 6.789823725181109
+  },
+  "median_accel_std": {
+    "standing": 0.08901557801894336,
+    "walking": 0.7784459124415544,
+    "jumping": 5.545137291846481,
+    "still": 0.040409478708445926
+  },
+  "still_to_standing_std_ratio": 2.2028390581623203,
+  "median_dominant_freq_hz": {
+    "standing": {
+      "x": 2.0023689548797523,
+      "y": 2.5029611935996905,
+      "z": 4.505330148479443
+    },
+    "walking": {
+      "x": 0.5005922387199381,
+      "y": 1.5017767161598141,
+      "z": 1.5017767161598141
+    },
+    "jumping": {
+      "x": 2.0023689548797523,
+      "y": 2.0023689548797523,
+      "z": 2.0023689548797523
+    },
+    "still": {
+      "x": 5.005922387199381,
+      "y": 6.0071068646392565,
+      "z": 7.008291342079133
+    }
+  },
+  "walking_share_dom_1_to_2p5_hz": 0.5978260869565217,
+  "nyquist_hz": 50.0592238719938,
+  "hop_s": 0.9988169238870894,
+  "window_s": 1.9976338477741789,
+  "seconds_per_activity": {
+    "standing": 92.3,
+    "walking": 108.6,
+    "jumping": 107.8,
+    "still": 88.2
+  },
+  "activities_below_90s": [
+    "still"
+  ],
+  "test_errors": [
+    {
+      "clip": "still_01.csv",
+      "window": 5,
+      "windows_in_clip": 7,
+      "window_start_s": 5.0,
+      "true": "still",
+      "decoded": "standing"
+    },
+    {
+      "clip": "still_01.csv",
+      "window": 6,
+      "windows_in_clip": 7,
+      "window_start_s": 6.0,
+      "true": "still",
+      "decoded": "standing"
+    },
+    {
+      "clip": "still_12.csv",
+      "window": 0,
+      "windows_in_clip": 6,
+      "window_start_s": 0.0,
+      "true": "still",
+      "decoded": "standing"
+    },
+    {
+      "clip": "still_12.csv",
+      "window": 1,
+      "windows_in_clip": 6,
+      "window_start_s": 1.0,
+      "true": "still",
+      "decoded": "standing"
+    },
+    {
+      "clip": "walking_13.csv",
+      "window": 0,
+      "windows_in_clip": 9,
+      "window_start_s": 0.0,
+      "true": "walking",
+      "decoded": "jumping"
+    },
+    {
+      "clip": "walking_13.csv",
+      "window": 1,
+      "windows_in_clip": 9,
+      "window_start_s": 1.0,
+      "true": "walking",
+      "decoded": "jumping"
+    }
+  ]
+}

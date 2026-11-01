@@ -1,4 +1,4 @@
 model,per-clip accuracy,concatenated-sequence accuracy
-"Viterbi, supervised init + Baum-Welch  [primary]",0.9137931034482759,0.9137931034482759
-"Viterbi, supervised init only (no Baum-Welch)",0.9137931034482759,0.9137931034482759
-"Emission only (per-window argmax, no transitions)",0.8620689655172413,0.8620689655172413
+"Viterbi, supervised init + Baum-Welch  [primary]",0.9154929577464789,0.9295774647887324
+"Viterbi, supervised init only (no Baum-Welch)",0.9154929577464789,0.9295774647887324
+"Emission only (per-window argmax, no transitions)",0.9154929577464789,0.9154929577464789
