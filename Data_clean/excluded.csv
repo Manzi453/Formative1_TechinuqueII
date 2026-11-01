@@ -1,0 +1,10 @@
+original_zip,activity,reason
+Data/standing/2026-10-28_17-17-21.zip,standing,too short after trimming 1.5 s from each end (3.73 s < 5 s; raw 6.74 s)
+Data/standing/2026-10-28_17-17-30.zip,standing,too short after trimming 1.5 s from each end (4.94 s < 5 s; raw 7.96 s)
+Data/standing/standing_02-2026-10-28_17-23-27.zip,standing,"mislabeled: signal looks like walking, not standing (trimmed accel-magnitude std 0.889, gyro std 0.586; class medians of kept files: standing 0.092, walking 0.772, jumping 5.651, still 0.041)"
+Data/jumping/2026-10-28_17-06-26.zip,jumping,too short after trimming 1.5 s from each end (4.57 s < 5 s; raw 7.59 s)
+Data/jumping/jumping_-2026-10-28_16-41-22.zip,jumping,too short after trimming 1.5 s from each end (4.18 s < 5 s; raw 7.19 s)
+Data/still/2026-10-28_17-14-00.zip,still,too short after trimming 1.5 s from each end (3.84 s < 5 s; raw 6.85 s)
+Data/still/2026-10-28_17-14-08.zip,still,too short after trimming 1.5 s from each end (4.73 s < 5 s; raw 7.75 s)
+Data/still/2026-10-28_17-14-16.zip,still,too short after trimming 1.5 s from each end (4.05 s < 5 s; raw 7.06 s)
+Data/still/2026-10-28_17-14-34.zip,still,too short after trimming 1.5 s from each end (4.36 s < 5 s; raw 7.38 s)
