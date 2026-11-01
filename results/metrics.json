@@ -1,0 +1,47 @@
+{
+  "seed": 42,
+  "window_samples": 200,
+  "hop_samples": 100,
+  "n_features": 44,
+  "var_floor": 0.5,
+  "eps": 0.0001,
+  "max_iter": 500,
+  "n_train_sequences": 10,
+  "measured_hz_mean": 100.11824993446407,
+  "measured_hz_min": 100.10519053421335,
+  "measured_hz_max": 100.12361833021275,
+  "measured_hz_std": 0.0051132089159660115,
+  "n_train_clips": 33,
+  "n_test_clips": 10,
+  "n_train_windows": 166,
+  "n_test_windows": 58,
+  "bw_converged": true,
+  "bw_iterations": 3,
+  "ll_first": -62132.70979475938,
+  "ll_final": -62132.51610472817,
+  "ll_min_step": 6.339108222164214e-05,
+  "overall_accuracy_per_clip": 0.9137931034482759,
+  "overall_accuracy_concatenated": 0.9137931034482759,
+  "accuracy_init_only_per_clip": 0.9137931034482759,
+  "accuracy_emission_only_per_clip": 0.8620689655172413,
+  "variances_at_floor": 0.8011363636363636,
+  "median_unfloored_variance": 0.06517224830155141,
+  "overall_accuracy_wilson95": [
+    0.8135613862273433,
+    0.9626151680662066
+  ],
+  "correct_windows": 53,
+  "test_windows": 58,
+  "state_to_activity": {
+    "standing": "standing",
+    "walking": "walking",
+    "jumping": "jumping",
+    "still": "still"
+  },
+  "top_features": [
+    "acc_sma",
+    "acc_rms_z",
+    "acc_std_z",
+    "acc_energy_z"
+  ]
+}

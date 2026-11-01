@@ -1,0 +1,15 @@
+# Versions below are the ones actually used to produce the notebook outputs and the report (Python 3.14.7).
+
+# --- notebook (HMM_Activity_Recognition.ipynb) and scripts/make_clean_dataset.py ---
+numpy==2.5.4
+pandas==3.1.0
+matplotlib==3.11.2
+
+# --- running the notebook ---
+ipykernel==7.4.0
+nbformat==5.11.1
+nbconvert==7.17.2
+
+# --- report/build_report.py (also needs a Chrome or Chromium binary; set CHROME to its path) ---
+Markdown==3.11.2
+pypdf==6.21.4
