@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""Build report/Formative2_HMM_Report.pdf from the markdown report.
-
-1. checks that every number quoted in the report matches results/ and Data_clean/
-2. markdown -> HTML (python-markdown) -> PDF (headless Chrome/Chromium)
-3. verifies the PDF has 4-5 pages
-
-Requires: markdown, pypdf, and a Chrome/Chromium binary (set CHROME to override).
-Run from anywhere:  python report/build_report.py
-"""
 import json
 import os
 import re
